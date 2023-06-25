@@ -1,37 +1,30 @@
-import { time, loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
-import { expect } from "chai";
-import { ethers } from "hardhat";
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
+import { expect } from 'chai';
+import { ethers, upgrades } from 'hardhat';
 
-describe("Marble", function () {
-  // We define a fixture to reuse the same setup in every test.
-  // We use loadFixture to run this setup once, snapshot that state,
-  // and reset Hardhat Network to that snapshot in every test.
-  async function deployOneYearLockFixture() {
-    const ONE_YEAR_IN_SECS = 365 * 24 * 60 * 60;
-    const ONE_GWEI = 1_000_000_000;
+describe('Marble', function () {
+  async function deployContracts() {
+    const signers = await ethers.getSigners();
+    const deployer = signers[0];
 
-    const lockedAmount = ONE_GWEI;
-    const unlockTime = (await time.latest()) + ONE_YEAR_IN_SECS;
+    const tokenName = 'Marble';
+    const tokenSymbol = 'MBL';
 
-    // Contracts are deployed using the first signer/account by default
-    const [owner, otherAccount] = await ethers.getSigners();
+    const Marble = await ethers.getContractFactory('Marble');
+    const marble = await upgrades.deployProxy(Marble, [tokenName, tokenSymbol]);
+    await marble.deployed();
 
-    const Lock = await ethers.getContractFactory("Lock");
-    const lock = await Lock.deploy(unlockTime, { value: lockedAmount });
-
-    return { lock, unlockTime, lockedAmount, owner, otherAccount };
+    return { deployer, marble };
   }
 
-  describe("Deployment", function () {
-    it("Should set the right unlockTime", async function () {
-      const { lock, unlockTime } = await loadFixture(deployOneYearLockFixture);
+  describe('initialize', function () {
+    it('Must grant DEFAULT_ADMIN_ROLE, PAUSER_ROLE, MINTER_ROLE, UPGRADER_ROLE to msg.sender', async function () {
+      const { deployer, marble } = await loadFixture(deployContracts);
 
-      expect(await lock.unlockTime()).to.equal(unlockTime);
+      expect(await marble.hasRole(await marble.DEFAULT_ADMIN_ROLE(), deployer.address)).to.be.true;
+      expect(await marble.hasRole(await marble.PAUSER_ROLE(), deployer.address)).to.be.true;
+      expect(await marble.hasRole(await marble.MINTER_ROLE(), deployer.address)).to.be.true;
+      expect(await marble.hasRole(await marble.UPGRADER_ROLE(), deployer.address)).to.be.true;
     });
-
-    
   });
-
-  
 });

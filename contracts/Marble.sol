@@ -21,16 +21,23 @@ contract Marble is
 
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
-    CountersUpgradeable.Counter private _tokenIdCounter;
     bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
+
+    CountersUpgradeable.Counter private _tokenIdCounter;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
     }
 
-    function initialize() public initializer {
-        __ERC721_init("Marble", "MBL");
+    /**
+     * @dev Initializes the contract by setting a `name` and a `symbol` to the token collection.
+     *
+     * State:
+     * - Must grant DEFAULT_ADMIN_ROLE, PAUSER_ROLE, MINTER_ROLE, UPGRADER_ROLE to msg.sender
+     */
+    function initialize(string memory name, string memory symbol) public initializer {
+        __ERC721_init(name, symbol);
         __Pausable_init();
         __AccessControl_init();
         __ERC721Burnable_init();
