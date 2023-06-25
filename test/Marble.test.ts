@@ -7,11 +7,8 @@ describe('Marble', function () {
     const signers = await ethers.getSigners();
     const deployer = signers[0];
 
-    const tokenName = 'Marble';
-    const tokenSymbol = 'MBL';
-
     const Marble = await ethers.getContractFactory('Marble');
-    const marble = await upgrades.deployProxy(Marble, [tokenName, tokenSymbol]);
+    const marble = await upgrades.deployProxy(Marble, ['Marble', 'MBL']);
     await marble.deployed();
 
     return { deployer, marble };
