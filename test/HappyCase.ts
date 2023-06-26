@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import { ethers, upgrades } from 'hardhat';
 import { GameController, Marble } from '../typechain-types';
 
-describe.only('Marblez', function () {
+describe.only('Marbles', function () {
   let deployer: SignerWithAddress;
   let playerOne: SignerWithAddress;
   let playerTwo: SignerWithAddress;
@@ -44,7 +44,7 @@ describe.only('Marblez', function () {
     expect(await marble.hasRole(await marble.MINTER_ROLE(), playerTwo.address)).to.be.true;
   });
 
-  it('Must mint 1 token to PlayerOne and 1 token to PlayerTwo', async function () {
+  it('Must mint 1 token to PlayerOne/PlayerTwo', async function () {
     let txn = await marble.safeMint(playerOne.address);
     await txn.wait();
     txn = await marble.safeMint(playerTwo.address);
@@ -53,7 +53,7 @@ describe.only('Marblez', function () {
     expect(await marble.balanceOf(playerTwo.address)).to.equal(1);
   });
 
-  it('Must grant controller approval to trade', async function () {
+  it('Must grant GameController approval to trade', async function () {
     let txn = await marble.connect(playerOne).setApprovalForAll(controller.address, true);
     await txn.wait();
 
@@ -64,12 +64,20 @@ describe.only('Marblez', function () {
     expect(await marble.isApprovedForAll(playerTwo.address, controller.address)).to.be.true;
   });
 
-  it('Must trade tokens using the Game Controller', async function () {
+  it('Submit a bid by PlayerOne', async function () {
+    let tokenId = 0;
+    let hitsToWin = 2;
+    let opponent = playerTwo.address;
+    let opponentTokenId = 1;
+    let opponentHitsToWin = 1;
+
+    expect(await marble.ownerOf(0)).to.equal(playerTwo.address);
+    expect(await marble.ownerOf(1)).to.equal(playerOne.address);
+  });
+
+  it('Must trade tokens using the GameController', async function () {
     expect(await marble.ownerOf(0)).to.equal(playerOne.address);
     expect(await marble.ownerOf(1)).to.equal(playerTwo.address);
-
-    let txn = await controller.connect(deployer).tradeMarble(playerOne.address, 0, playerTwo.address, 1);
-    await txn.wait();
 
     expect(await marble.ownerOf(0)).to.equal(playerTwo.address);
     expect(await marble.ownerOf(1)).to.equal(playerOne.address);
